@@ -172,43 +172,6 @@ let
     '';
   };
 
-  test-nixlock-update = pkgs.writeShellApplication {
-    name = "test-nixlock-update";
-    runtimeInputs = [
-      (empty.flake-file.apps.write-nixlock pkgs)
-    ];
-    text = ''
-      write-nixlock lock
-      grep empty ${outdir}/nixlock.lock.nix
-      write-nixlock update
-      grep empty ${outdir}/nixlock.lock.nix
-    '';
-  };
-
-  test-nixlock-update-one = pkgs.writeShellApplication {
-    name = "test-nixlock-update-one";
-    runtimeInputs = [
-      (empty.flake-file.apps.write-nixlock pkgs)
-    ];
-    text = ''
-      write-nixlock lock
-      write-nixlock update empty
-      grep empty ${outdir}/nixlock.lock.nix
-      if write-nixlock update nonexistent 2>/dev/null; then exit 1; fi
-    '';
-  };
-
-  test-nixlock = pkgs.writeShellApplication {
-    name = "test-nixlock";
-    runtimeInputs = [
-      (empty.flake-file.apps.write-nixlock pkgs)
-    ];
-    text = ''
-      write-nixlock
-      grep empty ${outdir}/nixlock.lock.nix
-    '';
-  };
-
   test-write-lock-flake = pkgs.writeShellApplication {
     name = "test-write-lock-flake";
     runtimeInputs = [
@@ -230,21 +193,38 @@ let
     ];
     text = ''
       mkdir -p ${outdir}/npins
-      echo '{"pins":{},"version":7}' > ${outdir}/npins/sources.json
+      echo '{"pins":{},"version":8}' > ${outdir}/npins/sources.json
       write-lock
       jq -e '.pins | has("empty")' ${outdir}/npins/sources.json
     '';
   };
 
-  test-write-lock-nixlock = pkgs.writeShellApplication {
-    name = "test-write-lock-nixlock";
+  test-tack = pkgs.writeShellApplication {
+    name = "test-tack";
     runtimeInputs = [
-      (empty.flake-file.apps.write-lock pkgs)
+      (empty.flake-file.apps.write-tack pkgs)
+      pkgs.jq
     ];
     text = ''
-      echo '{ }' > ${outdir}/nixlock.lock.nix
+      write-tack
+      cat ${outdir}/.tack/pins.toml
+      grep github:vic/empty-flake ${outdir}/.tack/pins.toml
+      jq -e 'has("empty")' ${outdir}/.tack/pins.lock.json
+      [ -e ${outdir}/.tack/default.nix ]
+    '';
+  };
+
+  test-write-lock-tack = pkgs.writeShellApplication {
+    name = "test-write-lock-tack";
+    runtimeInputs = [
+      (empty.flake-file.apps.write-lock pkgs)
+      pkgs.jq
+    ];
+    text = ''
+      mkdir -p ${outdir}/.tack
+      echo '{ }' > ${outdir}/.tack/pins.lock.json
       write-lock
-      grep empty ${outdir}/nixlock.lock.nix
+      jq -e 'has("empty")' ${outdir}/.tack/pins.lock.json
     '';
   };
 
@@ -260,28 +240,6 @@ let
     '';
   };
 
-  test-nixlock-schemes = pkgs.writeShellApplication {
-    name = "test-nixlock-schemes";
-    runtimeInputs = [
-      (all-inputs-schemes.flake-file.apps.write-nixlock pkgs)
-    ];
-    text = ''
-      write-nixlock
-      cat ${outdir}/nixlock.lock.nix
-      grep '"simple"' ${outdir}/nixlock.lock.nix
-      grep '"withBranch"' ${outdir}/nixlock.lock.nix
-      grep '"noflake"' ${outdir}/nixlock.lock.nix
-      grep '"gitHttps"' ${outdir}/nixlock.lock.nix
-      grep '"tarball"' ${outdir}/nixlock.lock.nix
-      grep '"tarballPlus"' ${outdir}/nixlock.lock.nix
-      grep '"fileHttps"' ${outdir}/nixlock.lock.nix
-      grep '"attrGh"' ${outdir}/nixlock.lock.nix
-      grep '"attrGhRef"' ${outdir}/nixlock.lock.nix
-      if grep '"followsSimple"' ${outdir}/nixlock.lock.nix; then exit 1; fi
-      grep vic/empty-flake ${outdir}/nixlock.lock.nix
-    '';
-  };
-
 in
 pkgs.mkShell {
   buildInputs = [
@@ -293,13 +251,10 @@ pkgs.mkShell {
     test-npins-skip
     test-npins-follows
     test-npins-transitive
-    test-nixlock
-    test-nixlock-update
-    test-nixlock-update-one
-    test-nixlock-schemes
+    test-tack
     test-write-lock-flake
     test-write-lock-npins
-    test-write-lock-nixlock
+    test-write-lock-tack
     test-write-lock-unflake
   ];
 }
