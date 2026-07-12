@@ -71,6 +71,40 @@ let
     expected = header + "\n\n[inputs.foo]\nurl = \"x\"\ntype = \"fixed\"\nunpack = \"tarball\"\n";
   };
 
+  tests.tackSerialize."test exclude follow empty" = {
+    expr = serialize {
+      inputs.foo = {
+        url = "x";
+        excludeFollow = [ ];
+      };
+    };
+    expected = header + "\n\n[inputs.foo]\nurl = \"x\"\n";
+  };
+
+  tests.tackSerialize."test exclude follow single" = {
+    expr = serialize {
+      inputs.foo = {
+        url = "x";
+        excludeFollow = [ "nixpkgs" ];
+      };
+    };
+    expected = header + "\n\n[inputs.foo]\nurl = \"x\"\nexclude_follow = [\"nixpkgs\"]\n";
+  };
+
+  tests.tackSerialize."test exclude follow multiple" = {
+    expr = serialize {
+      inputs.foo = {
+        url = "x";
+        excludeFollow = [
+          "nixpkgs"
+          "something_else"
+        ];
+      };
+    };
+    expected =
+      header + "\n\n[inputs.foo]\nurl = \"x\"\nexclude_follow = [\"nixpkgs\", \"something_else\"]\n";
+  };
+
   tests.tackSerialize."test follows table" = {
     expr = serialize {
       inputs.foo = {

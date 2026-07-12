@@ -61,6 +61,9 @@ let
       ++ optional ((inp.dir or "") != "") "dir = ${str inp.dir}"
       ++ optional ((inp.submodules or null) == true) "submodules = true"
       ++ optional ((inp.unpack or null) != null) "unpack = ${str inp.unpack}"
+      ++ optional (
+        (inp.excludeFollow or [ ]) != [ ]
+      ) "exclude_follow = [${concatStringsSep ", " (map str inp.excludeFollow)}]"
       ++ optional (followsTable inp != null) "follows = ${followsTable inp}"
     );
 

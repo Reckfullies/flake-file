@@ -17,6 +17,7 @@ let
     lib.filterAttrs (_: v: v != null) {
       tackType = inp.tackType or null;
       unpack = inp.unpack or null;
+      excludeFollow = inp.excludeFollow or null;
     }
   ) flake-file.inputs;
 
@@ -82,6 +83,11 @@ in
             );
             default = null;
             description = "tack unpack mode for fixed pins.";
+          };
+          excludeFollow = lib.mkOption {
+            type = lib.types.listOf lib.types.str;
+            default = [ ];
+            description = "tack all_follow input exclusions.";
           };
         };
       }
